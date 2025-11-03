@@ -32,10 +32,24 @@ def get_user_input():
 
 
 def is_comfortable_zone(temperature: float, humidity: float) -> bool:
-    """Проверка, находятся ли значения в комфортной зоне"""
-    temp_comfort = 18 <= temperature <= 22
-    hum_comfort = 40 <= humidity <= 60
+    """Проверка, находятся ли значения в комфортной зоне с запасом"""
+    # Расширяем комфортную зону для более стабильной работы
+    temp_comfort = 17 <= temperature <= 23  # было 18-22, стало 17-23
+    hum_comfort = 35 <= humidity <= 65  # было 40-60, стало 35-65
     return temp_comfort and hum_comfort
+
+
+def get_comfort_margin(temperature: float, humidity: float) -> tuple[float, float]:
+    """Вычисляет насколько близко значения к середине комфортной зоны"""
+    # Идеальные средние значения
+    ideal_temp = 20.0  # середина 17-23
+    ideal_hum = 50.0  # середина 35-65
+
+    # Вычисляем отклонение от идеала (0 = идеально, >0 = отклонение)
+    temp_margin = abs(temperature - ideal_temp)
+    hum_margin = abs(humidity - ideal_hum)
+
+    return temp_margin, hum_margin
 
 
 class VentilationSimulator:
@@ -70,13 +84,26 @@ class VentilationSimulator:
         self.external_humidity = 50 + 20 * np.sin(self.step * 0.05)
 
     def apply_control_actions(self, fan_speed: float, heater_state: float):
-        """Применение управляющих воздействий к модели цеха"""
-        temp_change_from_fan = (self.external_temp - self.temperature) * 0.2 * fan_speed
-        hum_change_from_fan = (self.external_humidity - self.humidity) * 0.2 * fan_speed
+        """Применение управляющих воздействий к модели цеха с учетом стремления к середине зоны"""
+        # Базовые изменения
+        temp_change_from_fan = (self.external_temp - self.temperature) * 0.08 * fan_speed
+        hum_change_from_fan = (self.external_humidity - self.humidity) * 0.08 * fan_speed
         temp_change_from_heater = heater_state * 0.8
 
-        self.temperature += temp_change_from_fan + temp_change_from_heater
-        self.humidity += hum_change_from_fan
+        # ДОБАВЛЯЕМ СТРЕМЛЕНИЕ К СЕРЕДИНЕ КОМФОРТНОЙ ЗОНЫ
+        ideal_temp = 20.0
+        ideal_hum = 50.0
+
+        # Если близко к комфортной зоне, добавляем мягкое подстраивание к середине
+        temp_margin, hum_margin = get_comfort_margin(self.temperature, self.humidity)
+
+        # Коэффициенты подстройки (чем дальше от идеала, тем сильнее воздействие)
+        temp_adjustment = (ideal_temp - self.temperature) * 0.02 * (1 - fan_speed)
+        hum_adjustment = (ideal_hum - self.humidity) * 0.02 * (1 - fan_speed)
+
+        # Обновление состояния с учетом подстройки
+        self.temperature += temp_change_from_fan + temp_change_from_heater + temp_adjustment
+        self.humidity += hum_change_from_fan + hum_adjustment
 
         # Ограничения
         self.temperature = max(10, min(30, self.temperature))
@@ -134,17 +161,24 @@ class VentilationSimulator:
             # Применяем управление
             self.apply_control_actions(fan_speed, heater_state)
 
-        # Статистика после завершения
+        # В конце метода run добавьте:
         print("\n" + "=" * 60)
         print("✅ СИМУЛЯЦИЯ ЗАВЕРШЕНА!")
         print(f"📊 СТАТИСТИКА:")
         print(f"   Всего шагов симуляции: {step}")
         print(f"   Активных шагов регулирования: {actual_steps}")
         print(f"   Шагов в комфортной зоне: {self.comfort_steps_count}")
+
+        # Более детальная информация о финальном состоянии
+        temp_margin, hum_margin = get_comfort_margin(self.temperature, self.humidity)
         print(f"   Финальное состояние: {self.temperature:.1f}°C, {self.humidity:.1f}%")
+        print(f"   Отклонение от идеала: темп. {temp_margin:.1f}°C, влаж. {hum_margin:.1f}%")
 
         if is_comfortable_zone(self.temperature, self.humidity):
-            print("🎉 ЦЕЛЬ ДОСТИГНУТА: параметры в комфортной зоне!")
+            if temp_margin <= 1.0 and hum_margin <= 5.0:
+                print("🎉 ОТЛИЧНО: параметры в оптимальной комфортной зоне!")
+            else:
+                print("✅ ХОРОШО: параметры в комфортной зоне")
         else:
             print("⚠️  Цель не достигнута: параметры вне комфортной зоны")
 

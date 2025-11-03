@@ -31,18 +31,17 @@ def init_database():
     cursor.execute("DELETE FROM fuzzy_sets")
     cursor.execute("DELETE FROM rules")
 
-    # Заполняем нечеткие множества для температуры
+    # Обновите параметры нечетких множеств:
     temp_sets = [
-        ('temperature', 'cold', 10, 10, 16, 18),
-        ('temperature', 'comfortable', 16, 18, 22, 24),
-        ('temperature', 'hot', 22, 24, 30, 30)
+        ('temperature', 'cold', 10, 10, 15, 17),  # было 10,10,16,18
+        ('temperature', 'comfortable', 15, 17, 23, 25),  # было 16,18,22,24
+        ('temperature', 'hot', 23, 25, 30, 30)  # было 22,24,30,30
     ]
 
-    # Заполняем нечеткие множества для влажности
     humidity_sets = [
-        ('humidity', 'low', 0, 0, 30, 40),
-        ('humidity', 'normal', 30, 40, 60, 70),
-        ('humidity', 'high', 60, 70, 100, 100)
+        ('humidity', 'low', 0, 0, 30, 35),  # было 0,0,30,40
+        ('humidity', 'normal', 30, 35, 65, 70),  # было 30,40,60,70
+        ('humidity', 'high', 65, 70, 100, 100)  # было 60,70,100,100
     ]
 
     cursor.executemany('INSERT INTO fuzzy_sets VALUES (NULL, ?, ?, ?, ?, ?, ?)',
@@ -56,10 +55,12 @@ def init_database():
         ('comfortable', 'normal', 'off', 'off', 5),
         (None, 'high', 'medium', 'off', 8),
         ('cold', 'high', 'medium', 'on', 9),
-        # ДОБАВЬТЕ ЭТИ НОВЫЕ ПРАВИЛА:
-        (None, 'low', 'medium', 'off', 7),  # НОВОЕ: при низкой влажности средняя вентиляция
-        ('comfortable', 'low', 'slow', 'off', 6),  # НОВОЕ: комфортно но сухо
-        ('comfortable', 'high', 'medium', 'off', 6),  # НОВОЕ: комфортно но влажно
+        (None, 'low', 'medium', 'off', 7),
+        ('comfortable', 'low', 'slow', 'off', 6),
+        ('comfortable', 'high', 'medium', 'off', 6),
+        # ДОБАВЬТЕ ЭТИ ПРАВИЛА ДЛЯ БОЛЕЕ ТОЧНОЙ РЕГУЛИРОВКИ:
+        (None, 'normal', 'slow', 'off', 4),  # Мягкая вентиляция при нормальной влажности
+        ('comfortable', None, 'off', 'off', 3),  # Выключение при комфортной температуре
     ]
 
     cursor.executemany('''
