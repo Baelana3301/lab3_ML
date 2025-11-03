@@ -135,9 +135,11 @@ class FuzzyInferenceSystem:
         denominator = 0.0
 
         for term, membership in fuzzy_output.items():
+            # ПРЕОБРАЗУЕМ numpy типы в обычные float
+            membership_val = float(membership)
             crisp_value = self.fan_speed_map[term]
-            numerator += crisp_value * membership
-            denominator += membership
+            numerator += crisp_value * membership_val
+            denominator += membership_val
 
         result = numerator / denominator if denominator != 0 else 0.0
         print(f"   Вентилятор: {fuzzy_output} → скорость {result:.2f}")

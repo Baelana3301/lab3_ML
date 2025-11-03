@@ -48,14 +48,18 @@ def init_database():
     cursor.executemany('INSERT INTO fuzzy_sets VALUES (NULL, ?, ?, ?, ?, ?, ?)',
                        temp_sets + humidity_sets)
 
-    # Заполняем правила
+    # В разделе с правилами добавьте:
     rules = [
         # temp, humidity, fan_speed, heater_state, priority
         ('cold', None, 'slow', 'on', 10),
         ('hot', None, 'high', 'off', 10),
         ('comfortable', 'normal', 'off', 'off', 5),
         (None, 'high', 'medium', 'off', 8),
-        ('cold', 'high', 'medium', 'on', 9)
+        ('cold', 'high', 'medium', 'on', 9),
+        # ДОБАВЬТЕ ЭТИ НОВЫЕ ПРАВИЛА:
+        (None, 'low', 'medium', 'off', 7),  # НОВОЕ: при низкой влажности средняя вентиляция
+        ('comfortable', 'low', 'slow', 'off', 6),  # НОВОЕ: комфортно но сухо
+        ('comfortable', 'high', 'medium', 'off', 6),  # НОВОЕ: комфортно но влажно
     ]
 
     cursor.executemany('''
