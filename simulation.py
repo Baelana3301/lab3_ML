@@ -58,8 +58,8 @@ class VentilationSimulator:
     def apply_control_actions(self, fan_speed: float, heater_state: float):
         """Применение управляющих воздействий к модели цеха"""
         # УВЕЛИЧЬТЕ КОЭФФИЦИЕНТЫ:
-        temp_change_from_fan = (self.external_temp - self.temperature) * 0.08 * fan_speed  # было 0.05
-        hum_change_from_fan = (self.external_humidity - self.humidity) * 0.08 * fan_speed  # было 0.05
+        temp_change_from_fan = (self.external_temp - self.temperature) * 0.2 * fan_speed  # было 0.05
+        hum_change_from_fan = (self.external_humidity - self.humidity) * 0.2 * fan_speed  # было 0.05
         temp_change_from_heater = heater_state * 0.8  # было 0.5
 
         self.temperature += temp_change_from_fan + temp_change_from_heater
