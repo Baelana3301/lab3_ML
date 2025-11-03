@@ -31,14 +31,18 @@ class SimulationVisualizer:
         for ax in self.fig.axes:
             ax.clear()
 
+        # НОВЫЕ ГРАНИЦЫ КОМФОРТНОЙ ЗОНЫ
+        temp_comfort_min, temp_comfort_max = 17, 23
+        hum_comfort_min, hum_comfort_max = 35, 65
+
         # График температуры
         ax1 = self.fig.axes[0]
         ax1.plot(self.steps, self.temperatures, 'r-o', linewidth=2, markersize=4)
         ax1.set_title('ТЕМПЕРАТУРА В ЦЕХЕ')
         ax1.set_ylabel('Температура (°C)')
         ax1.grid(True, alpha=0.3)
-        ax1.axhline(y=18, color='blue', linestyle='--', alpha=0.7, label='Комфортная зона')
-        ax1.axhline(y=22, color='blue', linestyle='--', alpha=0.7)
+        ax1.axhline(y=temp_comfort_min, color='blue', linestyle='--', alpha=0.7, label='Комфортная зона')
+        ax1.axhline(y=temp_comfort_max, color='blue', linestyle='--', alpha=0.7)
         ax1.legend()
 
         # График влажности
@@ -47,8 +51,8 @@ class SimulationVisualizer:
         ax2.set_title('ВЛАЖНОСТЬ В ЦЕХЕ')
         ax2.set_ylabel('Влажность (%)')
         ax2.grid(True, alpha=0.3)
-        ax2.axhline(y=40, color='green', linestyle='--', alpha=0.7, label='Комфортная зона')
-        ax2.axhline(y=60, color='green', linestyle='--', alpha=0.7)
+        ax2.axhline(y=hum_comfort_min, color='green', linestyle='--', alpha=0.7, label='Комфортная зона')
+        ax2.axhline(y=hum_comfort_max, color='green', linestyle='--', alpha=0.7)
         ax2.legend()
 
         # График скорости вентилятора

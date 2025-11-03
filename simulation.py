@@ -33,10 +33,14 @@ def get_user_input():
 
 def is_comfortable_zone(temperature: float, humidity: float) -> bool:
     """Проверка, находятся ли значения в комфортной зоне с запасом"""
-    # Расширяем комфортную зону для более стабильной работы
-    temp_comfort = 17 <= temperature <= 23  # было 18-22, стало 17-23
-    hum_comfort = 35 <= humidity <= 65  # было 40-60, стало 35-65
+    # РАСШИРЕННЫЕ границы комфортной зоны
+    temp_comfort = 17 <= temperature <= 23  # расширенная зона
+    hum_comfort = 35 <= humidity <= 65     # расширенная зона
     return temp_comfort and hum_comfort
+
+def get_comfort_zone_bounds():
+    """Возвращает границы комфортной зоны для отображения"""
+    return (17, 23), (35, 65)  # новые границы
 
 
 def get_comfort_margin(temperature: float, humidity: float) -> tuple[float, float]:
@@ -67,9 +71,13 @@ class VentilationSimulator:
         self.step = 0
         self.comfort_steps_count = 0  # Счетчик шагов в комфортной зоне
 
+        # В методе замените вывод:
+        temp_bounds, hum_bounds = get_comfort_zone_bounds()
         print("\n" + "=" * 60)
         print("🚀 СИМУЛЯТОР СИСТЕМЫ ВЕНТИЛЯЦИИ ЦЕХА ЗАПУЩЕН!")
         print(f"📊 НАЧАЛЬНЫЕ УСЛОВИЯ: Температура={self.temperature}°C, Влажность={self.humidity}%")
+        print(
+            f"🎯 ЦЕЛЕВАЯ ЗОНА: Температура {temp_bounds[0]}-{temp_bounds[1]}°C, Влажность {hum_bounds[0]}-{hum_bounds[1]}%")
 
         # Проверяем начальные условия
         if is_comfortable_zone(self.temperature, self.humidity):
@@ -86,8 +94,8 @@ class VentilationSimulator:
     def apply_control_actions(self, fan_speed: float, heater_state: float):
         """Применение управляющих воздействий к модели цеха с учетом стремления к середине зоны"""
         # Базовые изменения
-        temp_change_from_fan = (self.external_temp - self.temperature) * 0.08 * fan_speed
-        hum_change_from_fan = (self.external_humidity - self.humidity) * 0.08 * fan_speed
+        temp_change_from_fan = (self.external_temp - self.temperature) * 0.18 * fan_speed
+        hum_change_from_fan = (self.external_humidity - self.humidity) * 0.18 * fan_speed
         temp_change_from_heater = heater_state * 0.8
 
         # ДОБАВЛЯЕМ СТРЕМЛЕНИЕ К СЕРЕДИНЕ КОМФОРТНОЙ ЗОНЫ
@@ -124,11 +132,13 @@ class VentilationSimulator:
             step += 1
 
             # Проверяем комфортную зону ПЕРЕД выполнением шага
+            # В цикле while, где проверяется комфортная зона, замените вывод:
             if is_comfortable_zone(self.temperature, self.humidity):
                 self.comfort_steps_count += 1
+                temp_bounds, hum_bounds = get_comfort_zone_bounds()
                 print(f"\n✅ ШАГ {step}: КОМФОРТНАЯ ЗОНА ДОСТИГНУТА!")
-                print(f"   Температура: {self.temperature:.1f}°C (18-22°C ✓)")
-                print(f"   Влажность: {self.humidity:.1f}% (40-60% ✓)")
+                print(f"   Температура: {self.temperature:.1f}°C ({temp_bounds[0]}-{temp_bounds[1]}°C ✓)")
+                print(f"   Влажность: {self.humidity:.1f}% ({hum_bounds[0]}-{hum_bounds[1]}% ✓)")
                 print(f"   Шаг пропущен - система работает в штатном режиме")
                 print("-" * 40)
 
@@ -161,7 +171,8 @@ class VentilationSimulator:
             # Применяем управление
             self.apply_control_actions(fan_speed, heater_state)
 
-        # В конце метода run добавьте:
+        # В конце метода run замените вывод статистики:
+        temp_bounds, hum_bounds = get_comfort_zone_bounds()
         print("\n" + "=" * 60)
         print("✅ СИМУЛЯЦИЯ ЗАВЕРШЕНА!")
         print(f"📊 СТАТИСТИКА:")
@@ -172,6 +183,7 @@ class VentilationSimulator:
         # Более детальная информация о финальном состоянии
         temp_margin, hum_margin = get_comfort_margin(self.temperature, self.humidity)
         print(f"   Финальное состояние: {self.temperature:.1f}°C, {self.humidity:.1f}%")
+        print(f"   Целевая зона: {temp_bounds[0]}-{temp_bounds[1]}°C, {hum_bounds[0]}-{hum_bounds[1]}%")
         print(f"   Отклонение от идеала: темп. {temp_margin:.1f}°C, влаж. {hum_margin:.1f}%")
 
         if is_comfortable_zone(self.temperature, self.humidity):
