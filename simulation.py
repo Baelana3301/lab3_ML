@@ -106,8 +106,8 @@ class VentilationSimulator:
         temp_margin, hum_margin = get_comfort_margin(self.temperature, self.humidity)
 
         # Коэффициенты подстройки (чем дальше от идеала, тем сильнее воздействие)
-        temp_adjustment = (ideal_temp - self.temperature) * 0.02 * (1 - fan_speed)
-        hum_adjustment = (ideal_hum - self.humidity) * 0.02 * (1 - fan_speed)
+        temp_adjustment = (ideal_temp - self.temperature) * 0.12 * (1 - fan_speed)
+        hum_adjustment = (ideal_hum - self.humidity) * 0.12 * (1 - fan_speed)
 
         # Обновление состояния с учетом подстройки
         self.temperature += temp_change_from_fan + temp_change_from_heater + temp_adjustment
