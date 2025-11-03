@@ -1,0 +1,61 @@
+@prefix : <http://www.semanticweb.org/ventilation#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+:Workshop a owl:Class ;
+    rdfs:label "Цех" .
+
+:Sensor a owl:Class ;
+    rdfs:label "Датчик" .
+
+:TemperatureSensor a owl:Class ;
+    rdfs:subClassOf :Sensor ;
+    rdfs:label "Датчик температуры" .
+
+:HumiditySensor a owl:Class ;
+    rdfs:subClassOf :Sensor ;
+    rdfs:label "Датчик влажности" .
+
+:Actuator a owl:Class ;
+    rdfs:label "Исполнительное устройство" .
+
+:Fan a owl:Class ;
+    rdfs:subClassOf :Actuator ;
+    rdfs:label "Вентилятор" .
+
+:Heater a owl:Class ;
+    rdfs:subClassOf :Actuator ;
+    rdfs:label "Обогреватель" .
+
+:hasSensor a owl:ObjectProperty ;
+    rdfs:domain :Workshop ;
+    rdfs:range :Sensor ;
+    rdfs:label "имеет датчик" .
+
+:hasActuator a owl:ObjectProperty ;
+    rdfs:domain :Workshop ;
+    rdfs:range :Actuator ;
+    rdfs:label "имеет исполнительное устройство" .
+
+:hasValue a owl:DatatypeProperty ;
+    rdfs:domain :Sensor ;
+    rdfs:range xsd:float ;
+    rdfs:label "имеет значение" .
+
+# Экземпляры
+:workshop1 a :Workshop ;
+    :hasSensor :tempSensor1, :humSensor1 ;
+    :hasActuator :fan1, :heater1 .
+
+:tempSensor1 a :TemperatureSensor ;
+    :hasValue 20.0 .
+
+:humSensor1 a :HumiditySensor ;
+    :hasValue 50.0 .
+
+:fan1 a :Fan .
+
+:heater1 a :Heater .
