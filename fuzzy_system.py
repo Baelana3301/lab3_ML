@@ -51,7 +51,9 @@ class FuzzyInferenceSystem:
         temp_fuzzy = self.fuzzify(temperature, 'temperature')
         hum_fuzzy = self.fuzzify(humidity, 'humidity')
 
-        print(f"Фаззификация: temp={temp_fuzzy}, humidity={hum_fuzzy}")
+        print("🎯 ФАЗЗИФИКАЦИЯ:")
+        print(f"   Температура {temperature}°C → {temp_fuzzy}")
+        print(f"   Влажность {humidity}% → {hum_fuzzy}")
 
         # Шаг 2: Получение правил из БД
         conn = sqlite3.connect(self.db_path)
@@ -64,8 +66,26 @@ class FuzzyInferenceSystem:
         fan_output = {}
         heater_output = {}
 
+        print("\n📋 ПРОВЕРКА ПРАВИЛ:")
+
         for rule in rules:
             rule_id, cond_temp, cond_hum, act_fan, act_heater, priority = rule
+
+            # Формируем читаемое условие
+            condition_parts = []
+            if cond_temp:
+                condition_parts.append(f"temp={cond_temp}")
+            if cond_hum:
+                condition_parts.append(f"hum={cond_hum}")
+            condition_str = " И ".join(condition_parts) if condition_parts else "ВСЕГДА"
+
+            # Формируем читаемое действие
+            action_parts = []
+            if act_fan:
+                action_parts.append(f"вентилятор={act_fan}")
+            if act_heater:
+                action_parts.append(f"обогреватель={act_heater}")
+            action_str = ", ".join(action_parts)
 
             # Вычисляем степень истинности условия
             truth_level = 1.0
@@ -77,21 +97,24 @@ class FuzzyInferenceSystem:
                 hum_truth = hum_fuzzy.get(cond_hum, 0)
                 truth_level = min(truth_level, hum_truth)
 
-            print(f"  Правило {rule_id}: {cond_temp}/{cond_hum} -> истинность={truth_level:.2f}")
+            # Красивый вывод правила
+            status = "✅ СРАБОТАЛО" if truth_level > 0 else "❌ НЕ СРАБОТАЛО"
+            print(f"   Правило {rule_id}: ЕСЛИ {condition_str} ТО {action_str}")
+            print(f"        Приоритет: {priority}, Истинность: {truth_level:.2f} → {status}")
 
             if truth_level > 0:
                 # Активация заключений
                 if act_fan:
-                    # Для вентилятора используем метод максимума
                     current_value = fan_output.get(act_fan, 0)
                     fan_output[act_fan] = max(current_value, truth_level)
 
                 if act_heater:
-                    # Для обогревателя тоже метод максимума
                     current_value = heater_output.get(act_heater, 0)
                     heater_output[act_heater] = max(current_value, truth_level)
 
-        print(f"Активированные правила: fan={fan_output}, heater={heater_output}")
+        print(f"\n🎛 АКТИВИРОВАННЫЕ ДЕЙСТВИЯ:")
+        print(f"   Вентилятор: {fan_output}")
+        print(f"   Обогреватель: {heater_output}")
 
         # Шаг 4: Дефаззификация
         fan_result = self.defuzzify_fan(fan_output)
@@ -103,11 +126,11 @@ class FuzzyInferenceSystem:
         }
 
     def defuzzify_fan(self, fuzzy_output: Dict[str, float]) -> float:
-        """Дефаззификация для скорости вентилятора (метод центра максимумов)"""
+        """Дефаззификация для скорости вентилятора"""
         if not fuzzy_output:
+            print("   Вентилятор: нет активированных правил → ВЫКЛ")
             return 0.0
 
-        # Для каждого терма берем его четкое значение и умножаем на степень истинности
         numerator = 0.0
         denominator = 0.0
 
@@ -117,18 +140,19 @@ class FuzzyInferenceSystem:
             denominator += membership
 
         result = numerator / denominator if denominator != 0 else 0.0
-        print(f"Дефаззификация вентилятора: {fuzzy_output} -> {result:.2f}")
+        print(f"   Вентилятор: {fuzzy_output} → скорость {result:.2f}")
         return result
 
     def defuzzify_heater(self, fuzzy_output: Dict[str, float]) -> float:
         """Дефаззификация для обогревателя"""
         if not fuzzy_output:
+            print("   Обогреватель: нет активированных правил → ВЫКЛ")
             return 0.0
 
-        # Для бинарного выхода используем максимальное значение
         on_value = fuzzy_output.get('on', 0)
         off_value = fuzzy_output.get('off', 0)
 
         result = 1.0 if on_value > off_value else 0.0
-        print(f"Дефаззификация обогревателя: {fuzzy_output} -> {'ВКЛ' if result > 0.5 else 'ВЫКЛ'}")
+        status = "ВКЛ" if result > 0.5 else "ВЫКЛ"
+        print(f"   Обогреватель: {fuzzy_output} → {status}")
         return result
